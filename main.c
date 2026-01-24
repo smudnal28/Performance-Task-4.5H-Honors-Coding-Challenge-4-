@@ -1,54 +1,57 @@
 #include <stdio.h>
 
+// PROJECT: CURVE STITCHING
+
 int main() {
-    // Open the file with "w" (write) mode to create the SVG file from scratch.
+    
+    // We establish a 'FILE' pointer to handle the output stream to the disk.
+    // 'fopen' with "w" mode creates a new file, allowing the program to write raw XML/SVG instructions directly from the logic.
     FILE *fp = fopen("curve.svg", "w");
     if (fp == NULL) return 1;
 
-    // These variables act as our 'settings.'
-    // 'steps' controls the density of the lines, and 'gap' is the math that 
-    // spreads them out evenly across the length of the 'size' variable.
+    // 'steps' controls the line density; 'size' defines the axial magnitude.
+    // I applied an explicit (float) type cast to 'size' to ensure that the division for 'gap' remains precise and avoids integer truncation errors.
     int i, centerX = 300, centerY = 300, size = 150, steps = 15;
     float gap = (float)size / steps;
 
-    // I used an SVG group <g> to shift the (0,0) origin to the center of the screen.
-    // This makes the math easier because I can treat the center as a starting point.
+    // Digital displays use a top-left origin (0,0). I used an SVG group <g> with a 'translate' transform to shift our logical origin to the center.
+    // This allows for symmetrical Cartesian plotting across all four quadrants.
     fprintf(fp, "<svg width='600' height='600' xmlns='http://www.w3.org/2000/svg' style='background: #000;'>\n");
     fprintf(fp, "<g transform='translate(300,300)'>\n");
 
-    // This loop creates the 'string art' effect.
+    // This 'for' loop acts as the procedural engine, calculating the specific vertices for every line based on the current iteration 'i'.
     for (i = 0; i <= steps; i++) {
-        // Connects a point on the Y-axis to a point on the X-axis. 
-        // As i increases, 'offset' moves away from the center while 'invOffset' 
-        // moves toward the center, creating the curved optical illusion.
+        
+        // To create the curve, we connect points that move in opposite directions.
+        // 'offset' increases with the loop, while 'invOffset' decreases.
+        // This inverse relationship defines the geometry of the parabolic envelope.
         float offset = i * gap;
         float invOffset = size - (i * gap);
         
-        // This takes the current loop index and maps it to a 360-degree color wheel.
-        // It ensures the star cycles through the full HSL rainbow as it iterates.
+        // Instead of RGB, I used HSL (Hue, Saturation, Lightness).
+        // By normalizing 'i' (dividing it by steps) and multiplying by 360, we map the loop progress to the degrees of the color wheel.
         float hue = ((float)i / steps) * 360;
 
-        // I'm drawing the curve four times, one for each quadrant of the screen.
-        // Each line uses a mix of offset and invOffset to stay aligned with the axes.
+        // Cartesian Quadrant Plotting:
+        // We project the calculated points across all four quadrants by manipulating the positive/negative signs of the X and Y coordinates.
 
-        // Top-Right Quadrant: Y is negative (up), X is positive (right).
+        // Top-Right: Positive X, Negative Y (Displacement Up)
         fprintf(fp, "<line x1='0' y1='%f' x2='%f' y2='0' stroke='hsl(%f, 100%%, 50%%)' stroke-width='1.2' />\n", -invOffset, offset, hue);
         
-        // Top-Left Quadrant: Both X and Y are negative to move up and left.
+        // Top-Left: Negative X, Negative Y (Displacement Up/Left)
         fprintf(fp, "<line x1='0' y1='%f' x2='%f' y2='0' stroke='hsl(%f, 100%%, 50%%)' stroke-width='1.2' />\n", -invOffset, -offset, hue);
         
-        // Bottom-Left Quadrant: Y is positive (down), X is negative (left).
+        // Bottom-Left: Negative X, Positive Y (Displacement Down/Left)
         fprintf(fp, "<line x1='0' y1='%f' x2='%f' y2='0' stroke='hsl(%f, 100%%, 50%%)' stroke-width='1.2' />\n", invOffset, -offset, hue);
         
-        // Bottom-Right Quadrant: Both X and Y are positive.
+        // Bottom-Right: Positive X, Positive Y (Displacement Down/Right)
         fprintf(fp, "<line x1='0' y1='%f' x2='%f' y2='0' stroke='hsl(%f, 100%%, 50%%)' stroke-width='1.2' />\n", invOffset, offset, hue);
     }
 
-    // Wrap up the file by closing the SVG tag and the file stream.
+    // Closing the XML tags and the file stream ensures all buffered data is written to the disk correctly and system memory is released.
     fprintf(fp, "</g>\n</svg>");
     fclose(fp);
     
-    //Confirmation that the progam ran
-    printf("Successfully created 'curve.svg' containing only the star!\n");
+    printf("Successfully created 'curve.svg'.\n");
     return 0;
 }
